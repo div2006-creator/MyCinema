@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 src/scratch/
+scratch/
 .env
 .env.*
 !.env.example

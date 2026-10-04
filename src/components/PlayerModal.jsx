@@ -137,7 +137,7 @@ export default function PlayerModal({
         setSelectedServer(STREAM_SERVERS[3].id);
       } else if (e.key === 'h' || e.key === 'H') {
         setAudioMode(prev => prev === 'hindi' ? 'multi' : 'hindi');
-        const hindiServer = STREAM_SERVERS.find(s => s.id === 'vidsrc_pm') || STREAM_SERVERS[1];
+        const hindiServer = STREAM_SERVERS.find(s => s.id === 'vidlink') || STREAM_SERVERS[0];
         if (hindiServer) setSelectedServer(hindiServer.id);
       } else if (e.key === 'r' || e.key === 'R') {
         setIsLoaded(false);
@@ -150,8 +150,10 @@ export default function PlayerModal({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose, toggleFullscreen]);
 
-  // Exact movie identifier: prioritize TMDB ID for VidLink / VidSrc, fallback to IMDB
-  const streamIdentifier = movie?.tmdbId || movie?.imdbId || '693134';
+  // Exact movie identifier: prioritize TMDB ID for VidLink / AutoEmbed, fallback to IMDB or validated numeric ID
+  const streamIdentifier = movie?.tmdbId || movie?.imdbId || (
+    typeof movie?.id === 'string' && (movie.id.startsWith('tt') || /^\d+$/.test(movie.id)) ? movie.id : '299534'
+  );
 
   // Individual trailer key specific to this movie. If missing, use YouTube search embed for that exact title!
   const movieTrailerUrl = movie?.trailerKey 
@@ -202,6 +204,11 @@ export default function PlayerModal({
 
   useEffect(() => {
     setIsLoaded(false);
+    // Safety auto-dismiss: ensure loading veil drops after 3.5s so user is NEVER blocked if iframe onLoad doesn't fire
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+    }, 3500);
+    return () => clearTimeout(timer);
   }, [playbackMode, selectedServer, selectedSeason, selectedEpisode, sandboxEnabled, audioMode, reloadKey]);
 
   const handleShare = () => {
@@ -456,7 +463,7 @@ export default function PlayerModal({
                   key={`${selectedServer}-${streamIdentifier}-${selectedSeason}-${selectedEpisode}-${audioMode}-${sandboxEnabled}-${reloadKey}`}
                   src={fullStreamUrl}
                   title={`${movie.title} Full Playback Stream`}
-                  referrerPolicy="origin"
+                  referrerPolicy="no-referrer"
                   {...(sandboxEnabled ? { sandbox: "allow-forms allow-scripts allow-same-origin allow-presentation" } : {})}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                   allowFullScreen
@@ -465,13 +472,20 @@ export default function PlayerModal({
                 />
 
                 {!isLoaded && (
-                  <div className="absolute inset-0 bg-[#060912] flex flex-col items-center justify-center text-amber-400 font-mono text-xs z-10 pointer-events-none p-4 text-center">
+                  <div 
+                    onClick={() => setIsLoaded(true)}
+                    className="absolute inset-0 bg-[#060912] flex flex-col items-center justify-center text-amber-400 font-mono text-xs z-10 p-4 text-center cursor-pointer select-none"
+                    title="Click to reveal player controls immediately"
+                  >
                     <RefreshCw className="w-9 h-9 animate-spin mb-3 text-amber-400" />
                     <span className="tracking-widest uppercase text-white font-bold mb-1 text-sm sm:text-base">
                       INITIALIZING FULL STREAM FOR {movie.title}...
                     </span>
-                    <span className="text-slate-400 text-xs">
+                    <span className="text-slate-400 text-xs mb-3">
                       Connecting to {currentServerObj.name} • Anti-Redirect Shield Active
+                    </span>
+                    <span className="text-[10px] text-amber-400/90 bg-black/70 px-3 py-1 rounded-full border border-amber-500/40">
+                      Tap anywhere to show player immediately
                     </span>
                   </div>
                 )}
