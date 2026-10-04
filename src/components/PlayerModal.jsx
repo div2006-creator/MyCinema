@@ -50,10 +50,8 @@ export default function PlayerModal({
 
   // Modes: 'FULL_STREAM' (Primary: Full Movie / Episode stream via third-party nodes), 'TRAILER' (Official 4K trailer for this title), 'ARCHIVE' (Open archive MP4)
   const [playbackMode, setPlaybackMode] = useState('FULL_STREAM');
-  // Default to Server 2 (VidSrc PM) if user selected Hindi Dub, otherwise Server 1 (VidLink Pro)
-  const [selectedServer, setSelectedServer] = useState(
-    hasHindiDub && !isAnime ? 'vidsrc_pm' : STREAM_SERVERS[0].id
-  );
+  // Default to Server 1 (VidLink Pro) which provides the 4K Ultra Multi-Audio and Hindi Dubbed audio tracks
+  const [selectedServer, setSelectedServer] = useState(STREAM_SERVERS[0].id);
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
   const [copied, setCopied] = useState(false);
@@ -388,7 +386,7 @@ export default function PlayerModal({
                   <button
                     onClick={() => {
                       setAudioMode('hindi');
-                      setSelectedServer('vidsrc_pm');
+                      setSelectedServer('vidlink');
                     }}
                     className={`px-3.5 py-1 rounded-xl text-[11px] font-mono transition-all cursor-pointer flex items-center gap-1.5 ${
                       audioMode === 'hindi'
@@ -401,7 +399,10 @@ export default function PlayerModal({
                   </button>
 
                   <button
-                    onClick={() => setAudioMode('multi')}
+                    onClick={() => {
+                      setAudioMode('multi');
+                      setSelectedServer('vidlink');
+                    }}
                     className={`px-3 py-1 rounded-xl text-[11px] font-mono transition-all cursor-pointer flex items-center gap-1.5 ${
                       audioMode === 'multi'
                         ? 'bg-amber-500 text-black font-bold shadow-[0_0_12px_rgba(245,158,11,0.5)] scale-105'
@@ -428,16 +429,19 @@ export default function PlayerModal({
           </div>
         )}
 
-        {/* Live Hindi Dub Assistance Banner */}
-        {playbackMode === 'FULL_STREAM' && currentUser && audioMode === 'hindi' && (
-          <div className="px-3 sm:px-6 py-2 bg-gradient-to-r from-amber-950/70 via-[#161208] to-amber-950/70 border-b border-amber-500/30 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-amber-200">
-            <span className="flex items-center gap-1.5 font-bold">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
-              <span>🇮🇳 HINDI DUB / DUAL AUDIO STREAM ACTIVE: Connected to Server 2 (VidSrc PM - Hindi Stream)</span>
-            </span>
-            <span className="text-slate-300 text-[10px]">
-              Note: If audio defaults to English, switch to Server 1 (VidLink Pro) or Server 3 (AnyEmbed VIP) & pick Hindi in player audio options.
-            </span>
+        {/* Live Hindi Dub Audio Guide Banner */}
+        {playbackMode === 'FULL_STREAM' && currentUser && (audioMode === 'hindi' || hasHindiDub) && (
+          <div className="px-3 sm:px-6 py-2.5 bg-gradient-to-r from-amber-950/90 via-[#181308] to-amber-950/90 border-b border-amber-500/40 flex flex-wrap items-center justify-between gap-2.5 text-[11px] font-mono text-amber-200">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping shrink-0" />
+              <span className="font-bold text-white text-xs">
+                🇮🇳 HINDI DUB & MULTI-AUDIO ACTIVE (Server 1 - VidLink Pro)
+              </span>
+            </div>
+            <div className="flex items-center gap-2 bg-black/60 px-3 py-1 rounded-lg border border-amber-500/30 text-amber-300">
+              <span className="text-white font-bold">👉 TO PLAY IN HINDI:</span>
+              <span>Inside video player at bottom-right, click 🎧 Audio / Subtitles (⚙️) ➔ select &quot;Hindi&quot; track!</span>
+            </div>
           </div>
         )}
 
@@ -481,8 +485,15 @@ export default function PlayerModal({
 
                   <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-mono text-amber-300 bg-black/85 px-2.5 py-1.5 rounded-full border border-amber-500/30 backdrop-blur-md">
                     <Volume2 className="w-3.5 h-3.5 text-amber-400" />
-                    <span className="font-bold">SOUND: UNMUTED (100% STEREO)</span>
+                    <span className="font-bold">SOUND: UNMUTED</span>
                   </div>
+
+                  {hasHindiDub && (
+                    <div className="hidden md:flex items-center gap-1.5 text-[10px] font-mono text-amber-200 bg-amber-950/90 px-3 py-1.5 rounded-full border border-amber-500/50 backdrop-blur-md shadow-lg">
+                      <Languages className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Switch to Hindi: Click 🎧 Audio icon at bottom-right of player</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5">

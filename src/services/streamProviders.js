@@ -7,35 +7,33 @@
 export const STREAM_SERVERS = [
   {
     id: 'vidlink',
-    name: 'Server 1 (VidLink Pro - 4K Ultra Multi-Audio)',
+    name: 'Server 1 (VidLink Pro - Multi-Audio & Hindi Dub)',
     badge: '4K UHD / DUAL AUDIO',
     quality: '4K UHD / 1080p',
-    description: 'Best for 4K picture quality and loud normalized stereo vocals. Supports internal audio track switching.',
+    description: '4K picture quality with Multi-Language Audio tracks (Hindi Dub, English Original, Dual Audio). Switch audio tracks inside the player controls.',
     getMovieUrl: (id, options = {}) => {
       const cleanId = id || options.tmdbId || options.imdbId || '299534';
       return `https://vidlink.pro/movie/${cleanId}?primaryColor=f59e0b&secondaryColor=fbbf24&iconColor=f59e0b&multi_lang=1&autoplay=false&muted=false&volume=1`;
     },
     getTvUrl: (id, season = 1, episode = 1, options = {}) => {
-      // VidLink TV prefers numeric TMDB ID over tt-imdbId to avoid 500 error
       const cleanId = (typeof id === 'string' && id.startsWith('tt') && options.tmdbId) ? options.tmdbId : id;
       return `https://vidlink.pro/tv/${cleanId}/${season}/${episode}?primaryColor=f59e0b&secondaryColor=fbbf24&iconColor=f59e0b&multi_lang=1&autoplay=false&muted=false&volume=1`;
     },
-    getAnimeUrl: (malId, ep = 1, audio = 'dub', tmdbId = null, season = 1, options = {}) => {
+    getAnimeUrl: (malId, ep = 1, audio = 'dub', id = null, season = 1, options = {}) => {
       if (malId) {
-        // VidLink Anime endpoint: explicit dub (English Dubbed) or sub (Original Japanese)
         const mode = audio === 'sub' ? 'sub' : 'dub';
         return `https://vidlink.pro/anime/${malId}/${ep}/${mode}?fallback=true&primaryColor=f59e0b&secondaryColor=fbbf24&iconColor=f59e0b&autoplay=false&muted=false&volume=1`;
       }
-      const cleanId = tmdbId || options.tmdbId || id;
+      const cleanId = id || options.tmdbId;
       return `https://vidlink.pro/tv/${cleanId}/${season}/${ep}?primaryColor=f59e0b&secondaryColor=fbbf24&iconColor=f59e0b&multi_lang=1&autoplay=false&muted=false&volume=1`;
     }
   },
   {
     id: 'vidsrc_pm',
-    name: 'Server 2 (VidSrc PM - Hindi & Dual Audio HD)',
-    badge: 'HINDI DUB / FULL HD',
+    name: 'Server 2 (VidSrc PM - Master HD Stream)',
+    badge: 'MASTER HD / ENG',
     quality: '1080p Full HD',
-    description: 'Best for instant Hindi Dub & Dual Audio playback. Auto-activates Hindi soundtrack.',
+    description: 'High-speed master English feed with high definition bitrate.',
     getMovieUrl: (id, options = {}) => {
       const isImdb = (typeof id === 'string' && id.startsWith('tt')) || (!id && options.imdbId);
       const cleanId = isImdb ? (typeof id === 'string' && id.startsWith('tt') ? id : options.imdbId) : (id || options.tmdbId);
@@ -52,8 +50,8 @@ export const STREAM_SERVERS = [
         ? `https://vidsrc.pm/embed/tv?imdb=${cleanId}&season=${season}&episode=${episode}&ds_lang=${lang}&autoplay=0&mute=0&muted=0`
         : `https://vidsrc.pm/embed/tv?tmdb=${cleanId}&season=${season}&episode=${episode}&ds_lang=${lang}&autoplay=0&mute=0&muted=0`;
     },
-    getAnimeUrl: (malId, ep = 1, audio = 'dub', tmdbId = null, season = 1, options = {}) => {
-      const cleanId = tmdbId || options.tmdbId || options.imdbId;
+    getAnimeUrl: (malId, ep = 1, audio = 'dub', id = null, season = 1, options = {}) => {
+      const cleanId = id || options.tmdbId || options.imdbId;
       const isImdb = typeof cleanId === 'string' && cleanId.startsWith('tt');
       return isImdb
         ? `https://vidsrc.pm/embed/tv?imdb=${cleanId}&season=${season}&episode=${ep}&ds_lang=en&autoplay=0&mute=0&muted=0`
@@ -76,8 +74,8 @@ export const STREAM_SERVERS = [
       const cleanId = id || options.tmdbId || options.imdbId;
       return `https://anyembed.xyz/embed/${isImdb ? 'imdb' : 'tmdb'}-tv-${cleanId}-${season}-${episode}?autoplay=0&mute=0`;
     },
-    getAnimeUrl: (malId, ep = 1, audio = 'dub', tmdbId = null, season = 1, options = {}) => {
-      const cleanId = tmdbId || options.tmdbId || options.imdbId;
+    getAnimeUrl: (malId, ep = 1, audio = 'dub', id = null, season = 1, options = {}) => {
+      const cleanId = id || options.tmdbId || options.imdbId;
       const isImdb = typeof cleanId === 'string' && cleanId.startsWith('tt');
       return `https://anyembed.xyz/embed/${isImdb ? 'imdb' : 'tmdb'}-tv-${cleanId}-${season}-${ep}?autoplay=0&mute=0`;
     }
@@ -96,8 +94,8 @@ export const STREAM_SERVERS = [
       const cleanId = id || options.tmdbId || options.imdbId;
       return `https://www.2embed.cc/embedtv/${cleanId}&s=${season}&e=${episode}&autoplay=0&mute=0`;
     },
-    getAnimeUrl: (malId, ep = 1, audio = 'dub', tmdbId = null, season = 1, options = {}) => {
-      const cleanId = tmdbId || options.tmdbId || options.imdbId;
+    getAnimeUrl: (malId, ep = 1, audio = 'dub', id = null, season = 1, options = {}) => {
+      const cleanId = id || options.tmdbId || options.imdbId;
       return `https://www.2embed.cc/embedtv/${cleanId}&s=${season}&e=${ep}&autoplay=0&mute=0`;
     }
   }
