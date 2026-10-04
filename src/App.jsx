@@ -12,6 +12,9 @@ import PlayerModal from './components/PlayerModal';
 import AuthModal from './components/AuthModal';
 import AgeVerificationModal from './components/AgeVerificationModal';
 import LiveWebExtractorBar from './components/LiveWebExtractorBar';
+import ContinueWatchingRow from './components/ContinueWatchingRow';
+import FilterMatrix from './components/FilterMatrix';
+import AccessibilityPanel from './components/AccessibilityPanel';
 import Footer from './components/Footer';
 
 import { HERO_TITLES, CATEGORIES } from './data/cinemaData';
@@ -23,7 +26,8 @@ import {
   getStoredAgeClearance,
   saveUserAgeClearance
 } from './services/authService';
-import { Film, Flame, Tv, Layers, Sparkles, Trophy } from 'lucide-react';
+import { idbGetWatchHistory, idbRemoveWatchHistory } from './services/db';
+import { Film, Flame, Tv, Layers, Sparkles, Trophy, SlidersHorizontal } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
@@ -38,6 +42,10 @@ export default function App() {
     }
   });
 
+  // Watch History (Continue Watching)
+  const [watchHistory, setWatchHistory] = useState([]);
+  const [isA11yOpen, setIsA11yOpen] = useState(false);
+
   // User Authentication & Age Verification State
   const [currentUser, setCurrentUser] = useState(() => getCurrentUser());
   const [ageClearance, setAgeClearance] = useState(() => getStoredAgeClearance());
@@ -47,6 +55,48 @@ export default function App() {
 
   const [isAgeModalOpen, setIsAgeModalOpen] = useState(false);
   const [pendingAgeMovie, setPendingAgeMovie] = useState(null);
+
+  // Load Watch History from IndexedDB & LocalStorage
+  const refreshWatchHistory = async () => {
+    try {
+      const items = await idbGetWatchHistory();
+      setWatchHistory(items || []);
+    } catch (e) {
+      console.warn('Could not load watch history:', e);
+    }
+  };
+
+  useEffect(() => {
+    refreshWatchHistory();
+  }, []);
+
+  const handleRemoveHistoryItem = async (movieId) => {
+    await idbRemoveWatchHistory(movieId);
+    setWatchHistory(prev => prev.filter(item => item.movieId !== movieId && item.id !== movieId));
+  };
+
+  // Global hotkeys: / or ⌘K (Search), Alt+A or ? (Accessibility), Esc (close modals)
+  useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+      if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+
+      if (e.key === '/' || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k')) {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      } else if ((e.altKey && e.key.toLowerCase() === 'a') || (e.shiftKey && e.key === '?')) {
+        e.preventDefault();
+        setIsA11yOpen(prev => !prev);
+      } else if (e.key === 'Escape') {
+        if (isA11yOpen) setIsA11yOpen(false);
+        else if (isSearchOpen) setIsSearchOpen(false);
+        else if (isAuthModalOpen) setIsAuthModalOpen(false);
+        else if (isAgeModalOpen) setIsAgeModalOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [isA11yOpen, isSearchOpen, isAuthModalOpen, isAgeModalOpen]);
 
   // Restore permanent database session on mount (survives tab/browser closes & device restarts)
   useEffect(() => {
@@ -275,6 +325,7 @@ export default function App() {
           if (tab === 'series') setDivisionFilter('series');
         }}
         onOpenSearch={() => setIsSearchOpen(true)}
+        onOpenA11y={() => setIsA11yOpen(true)}
         watchlistCount={watchlist.length}
         currentUser={currentUser}
         onOpenAuth={() => handleOpenAuth()}
@@ -293,6 +344,13 @@ export default function App() {
               onMoreInfo={handleMoreInfoHero}
               onToggleWatchlist={handleToggleWatchlist}
               watchlist={watchlist}
+            />
+
+            {/* Continue Watching / Playback Resume Bar (IndexedDB Synced) */}
+            <ContinueWatchingRow
+              items={watchHistory}
+              onResumeMovie={handlePlayMovie}
+              onRemoveItem={handleRemoveHistoryItem}
             />
 
             {/* Division Banner when viewing a dedicated channel */}
@@ -388,6 +446,14 @@ export default function App() {
               />
             )}
 
+            {/* ADVANCED FILTER & DISCOVERY MATRIX */}
+            <FilterMatrix
+              mediaList={uniqueCatalogItems}
+              onSelectMovie={handlePlayMovie}
+              onToggleWatchlist={handleToggleWatchlist}
+              watchlist={watchlist}
+            />
+
             {/* FORMAT 3: Distinct Divided Content Rows with Reel / Grid View Mode */}
             <div className="space-y-2">
               {getVisibleCategories().map((category) => (
@@ -451,7 +517,10 @@ export default function App() {
       {selectedMovie && (
         <PlayerModal
           movie={selectedMovie}
-          onClose={() => setSelectedMovie(null)}
+          onClose={() => {
+            setSelectedMovie(null);
+            refreshWatchHistory();
+          }}
           onToggleWatchlist={handleToggleWatchlist}
           isSaved={watchlist.some((item) => item.id === selectedMovie.id)}
           currentUser={currentUser}
@@ -463,6 +532,13 @@ export default function App() {
         <SearchModal
           onClose={() => setIsSearchOpen(false)}
           onSelectMovie={handlePlayMovie}
+        />
+      )}
+
+      {isA11yOpen && (
+        <AccessibilityPanel
+          isOpen={isA11yOpen}
+          onClose={() => setIsA11yOpen(false)}
         />
       )}
 

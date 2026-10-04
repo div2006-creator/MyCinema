@@ -131,3 +131,68 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Accessibility: Enhanced Focus Rings */
+:focus-visible {
+  outline: 3px solid #f59e0b !important;
+  outline-offset: 3px !important;
+  border-radius: 4px;
+}
+
+/* Accessibility: Reduced Motion */
+[data-reduced-motion="true"] *,
+[data-reduced-motion="true"] *::before,
+[data-reduced-motion="true"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Accessibility: High Contrast Mode */
+.high-contrast-mode {
+  --bg-void: #000000 !important;
+  --bg-primary: #000000 !important;
+  --bg-surface: #0a0a0a !important;
+  --bg-card: #000000 !important;
+  --gold-primary: #ffff00 !important;
+  --gold-light: #ffff55 !important;
+  --gold-dark: #cccc00 !important;
+  --amber-glow: rgba(255, 255, 0, 0.4) !important;
+  --platinum-text: #ffffff !important;
+  --muted-text: #e2e8f0 !important;
+  --border-gold: #ffff00 !important;
+  --border-subtle: #ffffff !important;
+}
+
+.high-contrast-mode body {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+.high-contrast-mode .cinema-panel,
+.high-contrast-mode .cinema-panel-gold,
+.high-contrast-mode .cinema-card {
+  background: #000000 !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: none !important;
+}
+
+.high-contrast-mode .gold-gradient-btn {
+  background: #ffff00 !important;
+  color: #000000 !important;
+  font-weight: 900 !important;
+  border: 2px solid #ffffff !important;
+}
+
+.high-contrast-mode .text-gold-gradient {
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: #ffff00 !important;
+  color: #ffff00 !important;
+}
+
+.high-contrast-mode :focus-visible {
+  outline: 3px solid #ffff00 !important;
+  outline-offset: 4px !important;
+}

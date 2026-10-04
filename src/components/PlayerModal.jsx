@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   X, 
   Bookmark, 
@@ -26,9 +26,13 @@ import {
   Headphones,
   ChevronDown,
   ChevronUp,
-  Info
+  Info,
+  Maximize,
+  Minimize,
+  Command
 } from 'lucide-react';
 import { STREAM_SERVERS, getStreamUrl } from '../services/streamProviders';
+import { idbSaveWatchHistory } from '../services/db';
 
 export default function PlayerModal({ 
   movie, 
@@ -56,8 +60,9 @@ export default function PlayerModal({
   const [isLoaded, setIsLoaded] = useState(false);
   const [showAudioBooster, setShowAudioBooster] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
-  // Sandbox disabled by default so third-party streaming engines (2Embed, VidLink, VidSrc) do not trigger "disable sandbox" blockers
   const [sandboxEnabled, setSandboxEnabled] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const playerContainerRef = useRef(null);
 
   // Standalone movies (including Anime films like Your Name, Spirited Away) must NEVER be treated as TV series
   const isTv = movie?.type === 'Movie'
@@ -67,6 +72,85 @@ export default function PlayerModal({
        (!movie?.type && ((movie?.episodes && movie.episodes > 1) || (movie?.seasons && movie.seasons > 1))));
   const totalEpisodes = movie?.episodes || (isTv ? 12 : 1);
   const totalSeasons = movie?.seasons || 1;
+
+  // Save to Continue Watching history in IndexedDB & LocalStorage
+  useEffect(() => {
+    if (!movie) return;
+    try {
+      idbSaveWatchHistory({
+        id: movie.id || movie.tmdbId || movie.imdbId || movie.title,
+        title: movie.title,
+        poster: movie.poster || movie.posterUrl,
+        backdrop: movie.backdrop || movie.backdropUrl,
+        year: movie.year,
+        rating: movie.rating || movie.imdbRating,
+        type: movie.type || (isTv ? 'Series' : 'Movie'),
+        hasHindiDub: movie.hasHindiDub || hasHindiDub,
+        tmdbId: movie.tmdbId,
+        imdbId: movie.imdbId,
+        malId: movie.malId,
+        season: isTv ? selectedSeason : undefined,
+        episode: isTv ? selectedEpisode : undefined,
+        lastWatchedServer: selectedServer,
+        progress: 35, // playback start marker
+        timestamp: Date.now()
+      }).catch(err => console.warn('[History] IDB save non-critical warning:', err));
+    } catch (e) {
+      console.warn('[History] Non-critical history error:', e);
+    }
+  }, [movie, selectedSeason, selectedEpisode, selectedServer, isTv]);
+
+  // Fullscreen toggler
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      if (playerContainerRef.current?.requestFullscreen) {
+        playerContainerRef.current.requestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
+
+  // Track fullscreen changes
+  useEffect(() => {
+    const handleFsChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    document.addEventListener('fullscreenchange', handleFsChange);
+    return () => document.removeEventListener('fullscreenchange', handleFsChange);
+  }, []);
+
+  // Keyboard Shortcuts: [1-4] Servers, [H] Hindi Dub, [R] Reload, [F] Fullscreen, [Esc] Close
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+
+      if (e.key === 'Escape') {
+        onClose();
+      } else if (e.key === '1' && STREAM_SERVERS[0]) {
+        setSelectedServer(STREAM_SERVERS[0].id);
+      } else if (e.key === '2' && STREAM_SERVERS[1]) {
+        setSelectedServer(STREAM_SERVERS[1].id);
+      } else if (e.key === '3' && STREAM_SERVERS[2]) {
+        setSelectedServer(STREAM_SERVERS[2].id);
+      } else if (e.key === '4' && STREAM_SERVERS[3]) {
+        setSelectedServer(STREAM_SERVERS[3].id);
+      } else if (e.key === 'h' || e.key === 'H') {
+        setAudioMode(prev => prev === 'hindi' ? 'multi' : 'hindi');
+        const hindiServer = STREAM_SERVERS.find(s => s.id === 'vidsrc_pm') || STREAM_SERVERS[1];
+        if (hindiServer) setSelectedServer(hindiServer.id);
+      } else if (e.key === 'r' || e.key === 'R') {
+        setIsLoaded(false);
+        setReloadKey(k => k + 1);
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullscreen();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose, toggleFullscreen]);
 
   // Exact movie identifier: prioritize TMDB ID for VidLink / VidSrc, fallback to IMDB
   const streamIdentifier = movie?.tmdbId || movie?.imdbId || '693134';
@@ -117,14 +201,6 @@ export default function PlayerModal({
     };
   }, []);
 
-  // Handle ESC key
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
 
   useEffect(() => {
     setIsLoaded(false);
@@ -366,7 +442,7 @@ export default function PlayerModal({
         )}
 
         {/* Video Player Display Container (16:9 ratio) */}
-        <div className="relative aspect-video w-full bg-black overflow-hidden group">
+        <div ref={playerContainerRef} className="relative aspect-video w-full bg-black overflow-hidden group">
           
           {/* PRIMARY MODE: EXACT FULL MOVIE / EPISODE VIA ACTIVE SERVER */}
           {playbackMode === 'FULL_STREAM' && (
@@ -408,12 +484,35 @@ export default function PlayerModal({
                       setIsLoaded(false);
                       setReloadKey(k => k + 1);
                     }}
-                    title="Reload stream video player"
+                    title="Reload stream video player (Hot key: R)"
                     className="px-2.5 py-1 rounded-full bg-black/85 hover:bg-amber-500/20 text-slate-300 hover:text-amber-300 border border-white/20 hover:border-amber-400/50 backdrop-blur-md text-[10px] font-mono flex items-center gap-1 transition-all cursor-pointer shadow-md"
                   >
                     <RefreshCw className="w-3 h-3" />
-                    <span>Reload</span>
+                    <span>Reload (R)</span>
                   </button>
+
+                  <button
+                    onClick={toggleFullscreen}
+                    title="Toggle Fullscreen (Hot key: F)"
+                    className="px-2.5 py-1 rounded-full bg-black/85 hover:bg-amber-500/20 text-slate-300 hover:text-amber-300 border border-white/20 hover:border-amber-400/50 backdrop-blur-md text-[10px] font-mono flex items-center gap-1 transition-all cursor-pointer shadow-md"
+                  >
+                    {isFullscreen ? <Minimize className="w-3 h-3" /> : <Maximize className="w-3 h-3" />}
+                    <span>{isFullscreen ? 'Exit (F)' : 'Full (F)'}</span>
+                  </button>
+                </div>
+
+                {/* Micro Hotkey Legend in Player Bar */}
+                <div className="absolute bottom-2 left-3 z-30 hidden sm:flex items-center gap-2 text-[9px] font-mono text-slate-400 bg-black/70 px-2.5 py-1 rounded border border-white/10 backdrop-blur-sm pointer-events-none">
+                  <span className="text-amber-400 font-bold">HOTKEYS:</span>
+                  <span>[1-4] Servers</span>
+                  <span>•</span>
+                  <span>[H] Hindi Dub</span>
+                  <span>•</span>
+                  <span>[R] Reload</span>
+                  <span>•</span>
+                  <span>[F] Fullscreen</span>
+                  <span>•</span>
+                  <span>[Esc] Close</span>
                 </div>
               </div>
             ) : (

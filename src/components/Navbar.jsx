@@ -14,13 +14,15 @@ import {
   Sparkles,
   Layers,
   Menu,
-  X
+  X,
+  SlidersHorizontal
 } from 'lucide-react';
 
 export default function Navbar({ 
   activeTab, 
   setActiveTab, 
   onOpenSearch, 
+  onOpenA11y,
   watchlistCount = 0,
   currentUser = null,
   onOpenAuth,
@@ -102,8 +104,21 @@ export default function Navbar({
         </nav>
 
         {/* Right: Quick Tools, Clearance Badge, Search & Account */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 sm:gap-3">
           
+          {/* Accessibility Suite Button */}
+          <button
+            onClick={onOpenA11y}
+            aria-label="Accessibility & Display Suite (Alt+A)"
+            title="Accessibility Suite & Hotkeys (Alt+A or ?)"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl cinema-panel hover:border-amber-400/40 text-slate-300 hover:text-white transition-all cursor-pointer group"
+          >
+            <SlidersHorizontal className="w-4 h-4 text-amber-400 group-hover:rotate-45 transition-transform" />
+            <span className="hidden xl:inline text-xs font-mono font-medium text-slate-300">
+              A11y
+            </span>
+          </button>
+
           {/* Quick Search Button with ⌘K Badge */}
           <button
             onClick={onOpenSearch}
@@ -114,7 +129,7 @@ export default function Navbar({
               Quick Search...
             </span>
             <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono text-slate-400 bg-black/50 border border-slate-700/60 rounded">
-              ⌘K
+              /
             </kbd>
           </button>
 
@@ -235,6 +250,20 @@ export default function Navbar({
               </button>
             );
           })}
+          
+          <button
+            onClick={() => {
+              setMobileMenuOpen(false);
+              onOpenA11y();
+            }}
+            className="w-full px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wide flex items-center justify-between text-amber-400 bg-white/5 hover:bg-white/10 mt-2"
+          >
+            <div className="flex items-center gap-3">
+              <SlidersHorizontal className="w-4 h-4 text-amber-400" />
+              <span>Accessibility & Display</span>
+            </div>
+            <span className="text-[10px] font-mono text-slate-400">HOTKEYS & A11Y</span>
+          </button>
         </div>
       )}
     </header>

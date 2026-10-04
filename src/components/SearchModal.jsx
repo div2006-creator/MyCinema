@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, X, Star, Play, Sparkles, Globe, Tv, RefreshCw, Film } from 'lucide-react';
+import { Search, X, Star, Play, Sparkles, Globe, Tv, RefreshCw, Film, Mic, MicOff, Volume2 } from 'lucide-react';
 import { CATEGORIES, HERO_TITLES } from '../data/cinemaData';
 import { searchLiveAnime } from '../services/aniListApi';
 
@@ -9,6 +9,8 @@ export default function SearchModal({ isOpen = true, onClose, onSelectMovie }) {
   const [liveResults, setLiveResults] = useState([]);
   const [isSearchingLive, setIsSearchingLive] = useState(false);
   const [customTmdbInput, setCustomTmdbInput] = useState('');
+  const [isListening, setIsListening] = useState(false);
+  const [speechNotice, setSpeechNotice] = useState('');
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -63,6 +65,61 @@ export default function SearchModal({ isOpen = true, onClose, onSelectMovie }) {
         );
       })
     : uniqueMedia.slice(0, 8);
+
+  const handleToggleVoiceSearch = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Voice Search requires Speech Recognition API (supported on Chrome, Edge, Safari).');
+      return;
+    }
+
+    if (isListening) {
+      setIsListening(false);
+      setSpeechNotice('');
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        setIsListening(true);
+        setSpeechNotice('🎙️ Listening... Speak a movie or anime title now.');
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        if (transcript) {
+          setQuery(transcript);
+          setSpeechNotice(`Recognized: "${transcript}"`);
+          setTimeout(() => setSpeechNotice(''), 3000);
+        }
+        setIsListening(false);
+      };
+
+      recognition.onerror = (event) => {
+        setIsListening(false);
+        if (event.error === 'not-allowed') {
+          setSpeechNotice('⚠️ Microphone permission denied. Please allow mic access in your browser.');
+        } else {
+          setSpeechNotice('Voice input timed out or cancelled. Click mic to retry.');
+        }
+        setTimeout(() => setSpeechNotice(''), 4000);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.start();
+    } catch (err) {
+      console.warn('Voice search failed:', err);
+      setIsListening(false);
+    }
+  };
 
   const handleLaunchCustomTmdb = (e) => {
     e.preventDefault();
@@ -132,8 +189,8 @@ export default function SearchModal({ isOpen = true, onClose, onSelectMovie }) {
           </button>
         </div>
 
-        {/* Search Input Bar */}
-        <div className="relative flex items-center mb-4">
+        {/* Search Input Bar with Voice Search Mic */}
+        <div className="relative flex items-center mb-2">
           <Search className="absolute left-4 w-5 h-5 text-amber-400" />
           <input
             type="text"
@@ -145,17 +202,42 @@ export default function SearchModal({ isOpen = true, onClose, onSelectMovie }) {
                 : "Search Iron Man, Avengers, Thor, Hindi Dub, Hollywood..."
             }
             autoFocus
-            className="w-full pl-12 pr-12 py-3.5 rounded-2xl bg-black/60 border border-slate-700/80 focus:border-amber-400 focus:outline-none text-white placeholder-slate-500 font-mono text-sm transition-all focus:shadow-[0_0_20px_rgba(245,158,11,0.25)]"
+            className="w-full pl-12 pr-24 py-3.5 rounded-2xl bg-black/60 border border-slate-700/80 focus:border-amber-400 focus:outline-none text-white placeholder-slate-500 font-mono text-sm transition-all focus:shadow-[0_0_20px_rgba(245,158,11,0.25)]"
           />
-          {query && (
+          <div className="absolute right-3.5 flex items-center gap-2">
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery('')}
+                className="text-xs font-mono text-slate-500 hover:text-slate-300 px-1 cursor-pointer"
+              >
+                CLEAR
+              </button>
+            )}
+
+            {/* Voice Search Mic Button */}
             <button
-              onClick={() => setQuery('')}
-              className="absolute right-4 text-xs font-mono text-slate-500 hover:text-slate-300 cursor-pointer"
+              type="button"
+              onClick={handleToggleVoiceSearch}
+              title={isListening ? "Listening... Speak title now" : "Voice Search (Click and speak)"}
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                isListening
+                  ? 'bg-red-500/20 text-red-400 border border-red-500/60 animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.6)]'
+                  : 'text-slate-400 hover:text-amber-400 hover:bg-white/10'
+              }`}
             >
-              CLEAR
+              {isListening ? <MicOff className="w-4 h-4 text-red-400" /> : <Mic className="w-4 h-4" />}
             </button>
-          )}
+          </div>
         </div>
+
+        {/* Live Voice Speech Feedback Notice */}
+        {speechNotice && (
+          <div className="mb-3 px-3.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 font-mono text-xs flex items-center gap-2 animate-fade-in">
+            <Volume2 className="w-3.5 h-3.5 animate-pulse" />
+            <span>{speechNotice}</span>
+          </div>
+        )}
 
         {/* Custom TMDB ID Quick Extractor */}
         <div className="mb-4 p-3 rounded-2xl bg-amber-950/20 border border-amber-500/20 flex flex-col sm:flex-row items-center justify-between gap-2.5">
