@@ -203,13 +203,19 @@ export default function App() {
   };
 
   const handleConfirmAgeVerification = async (clearance) => {
-    setAgeClearance(clearance);
-    await saveUserAgeClearance(clearance);
+    try {
+      setAgeClearance(clearance);
+      await saveUserAgeClearance(clearance);
+    } catch (err) {
+      console.warn('Non-fatal age clearance saving error:', err);
+    }
+
     setIsAgeModalOpen(false);
 
     if (pendingAgeMovie) {
-      setSelectedMovie(pendingAgeMovie);
+      const movieToOpen = pendingAgeMovie;
       setPendingAgeMovie(null);
+      setSelectedMovie(movieToOpen);
     }
   };
 
@@ -554,9 +560,11 @@ export default function App() {
 
       {isAgeModalOpen && pendingAgeMovie && (
         <AgeVerificationModal
+          isOpen={isAgeModalOpen}
           movie={pendingAgeMovie}
           currentClearance={ageClearance}
           onConfirm={handleConfirmAgeVerification}
+          onConfirmVerification={handleConfirmAgeVerification}
           onClose={() => {
             setIsAgeModalOpen(false);
             setPendingAgeMovie(null);

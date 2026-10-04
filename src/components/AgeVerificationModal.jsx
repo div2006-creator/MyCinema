@@ -22,8 +22,8 @@ export default function AgeVerificationModal({
   const requiredAge = movie?.ageRating === '18+' ? 18 : 13;
   const maxValidYear = currentYear - requiredAge;
 
-  const [selectedYear, setSelectedYear] = useState(maxValidYear - 2); // Default to a valid year
-  const [certifiedCheckbox, setCertifiedCheckbox] = useState(false);
+  const [selectedYear, setSelectedYear] = useState(maxValidYear - 2); // Default to an adult year (e.g. 2004/2000)
+  const [certifiedCheckbox, setCertifiedCheckbox] = useState(true);
   const [rememberOnDevice, setRememberOnDevice] = useState(true);
   const [errorNotice, setErrorNotice] = useState('');
 
@@ -41,7 +41,7 @@ export default function AgeVerificationModal({
   useEffect(() => {
     if (isOpen && movie) {
       setErrorNotice('');
-      setCertifiedCheckbox(false);
+      setCertifiedCheckbox(true);
       setSelectedYear(maxValidYear - 2);
     }
   }, [isOpen, movie, maxValidYear]);
@@ -60,23 +60,32 @@ export default function AgeVerificationModal({
     }
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+
     if (!isAgeValid) {
       setErrorNotice(`Access Denied: You must be at least ${requiredAge} years old to stream this transmission.`);
       return;
     }
+
+    // Auto-check certification if clicked verify
     if (!certifiedCheckbox) {
-      setErrorNotice(`Please check the confirmation box to certify your age.`);
-      return;
+      setCertifiedCheckbox(true);
     }
 
-    onConfirmVerification({
+    const clearanceData = {
       verifiedAge: calculatedAge,
       birthYear: selectedYear,
       is18Plus: calculatedAge >= 18,
       is13Plus: calculatedAge >= 13,
       rememberOnDevice
-    });
+    };
+
+    if (typeof onConfirm === 'function') {
+      onConfirm(clearanceData);
+    } else if (typeof onConfirmVerification === 'function') {
+      onConfirmVerification(clearanceData);
+    }
   };
 
   // Generate birth years from current year down to currentYear - 85
@@ -223,9 +232,9 @@ export default function AgeVerificationModal({
             <button
               type="button"
               onClick={handleConfirm}
-              disabled={!isAgeValid || !certifiedCheckbox}
+              disabled={!isAgeValid}
               className={`w-full py-3 rounded-xl font-mono font-bold text-xs uppercase tracking-widest transition-all cursor-pointer flex items-center justify-center gap-2 ${
-                isAgeValid && certifiedCheckbox
+                isAgeValid
                   ? 'bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 text-black shadow-[0_0_20px_rgba(52,211,153,0.5)] hover:scale-[1.02] active:scale-[0.99]'
                   : 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-60'
               }`}
