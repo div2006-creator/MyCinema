@@ -157,8 +157,8 @@ export default function PlayerModal({
 
   // Individual trailer key specific to this movie. If missing, use YouTube search embed for that exact title!
   const movieTrailerUrl = movie?.trailerKey 
-    ? `https://www.youtube-nocookie.com/embed/${movie.trailerKey}?autoplay=1&controls=1&rel=0&modestbranding=1`
-    : `https://www.youtube-nocookie.com/embed?listType=search&list=${encodeURIComponent((movie?.title || '') + ' official trailer')}&autoplay=1`;
+    ? `https://www.youtube-nocookie.com/embed/${movie.trailerKey}?autoplay=1&mute=0&controls=1&rel=0&modestbranding=1`
+    : `https://www.youtube-nocookie.com/embed?listType=search&list=${encodeURIComponent((movie?.title || '') + ' official trailer')}&autoplay=1&mute=0`;
 
   // Third-party full movie stream resolver URL
   const fullStreamUrl = getStreamUrl(
@@ -472,10 +472,17 @@ export default function PlayerModal({
                   </div>
                 )}
 
-                {/* Status & Quick Reload Overlay */}
-                <div className="absolute top-3 left-3 z-30 pointer-events-none flex items-center gap-2 text-[10px] font-mono text-emerald-300 bg-black/85 px-3 py-1.5 rounded-full border border-emerald-500/30 backdrop-blur-md">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="font-bold">EXACT FULL PLAYBACK // {currentServerObj.quality}</span>
+                {/* Status & Unmuted Audio Overlay */}
+                <div className="absolute top-3 left-3 z-30 pointer-events-none flex flex-wrap items-center gap-2">
+                  <div className="flex items-center gap-2 text-[10px] font-mono text-emerald-300 bg-black/85 px-3 py-1.5 rounded-full border border-emerald-500/30 backdrop-blur-md">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="font-bold">EXACT FULL PLAYBACK // {currentServerObj.quality}</span>
+                  </div>
+
+                  <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-mono text-amber-300 bg-black/85 px-2.5 py-1.5 rounded-full border border-amber-500/30 backdrop-blur-md">
+                    <Volume2 className="w-3.5 h-3.5 text-amber-400" />
+                    <span className="font-bold">SOUND: UNMUTED (100% STEREO)</span>
+                  </div>
                 </div>
 
                 <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5">

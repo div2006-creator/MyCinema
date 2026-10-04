@@ -13,21 +13,21 @@ export const STREAM_SERVERS = [
     description: 'Best for 4K picture quality and loud normalized stereo vocals. Supports internal audio track switching.',
     getMovieUrl: (id, options = {}) => {
       const cleanId = id || options.tmdbId || options.imdbId || '299534';
-      return `https://vidlink.pro/movie/${cleanId}?primaryColor=f59e0b&secondaryColor=fbbf24&iconColor=f59e0b&multi_lang=1`;
+      return `https://vidlink.pro/movie/${cleanId}?primaryColor=f59e0b&secondaryColor=fbbf24&iconColor=f59e0b&multi_lang=1&autoplay=false&muted=false&volume=1`;
     },
     getTvUrl: (id, season = 1, episode = 1, options = {}) => {
       // VidLink TV prefers numeric TMDB ID over tt-imdbId to avoid 500 error
       const cleanId = (typeof id === 'string' && id.startsWith('tt') && options.tmdbId) ? options.tmdbId : id;
-      return `https://vidlink.pro/tv/${cleanId}/${season}/${episode}?primaryColor=f59e0b&secondaryColor=fbbf24&iconColor=f59e0b&multi_lang=1`;
+      return `https://vidlink.pro/tv/${cleanId}/${season}/${episode}?primaryColor=f59e0b&secondaryColor=fbbf24&iconColor=f59e0b&multi_lang=1&autoplay=false&muted=false&volume=1`;
     },
     getAnimeUrl: (malId, ep = 1, audio = 'dub', tmdbId = null, season = 1, options = {}) => {
       if (malId) {
         // VidLink Anime endpoint: explicit dub (English Dubbed) or sub (Original Japanese)
         const mode = audio === 'sub' ? 'sub' : 'dub';
-        return `https://vidlink.pro/anime/${malId}/${ep}/${mode}?fallback=true&primaryColor=f59e0b&secondaryColor=fbbf24&iconColor=f59e0b`;
+        return `https://vidlink.pro/anime/${malId}/${ep}/${mode}?fallback=true&primaryColor=f59e0b&secondaryColor=fbbf24&iconColor=f59e0b&autoplay=false&muted=false&volume=1`;
       }
       const cleanId = tmdbId || options.tmdbId || id;
-      return `https://vidlink.pro/tv/${cleanId}/${season}/${ep}?primaryColor=f59e0b&secondaryColor=fbbf24&iconColor=f59e0b&multi_lang=1`;
+      return `https://vidlink.pro/tv/${cleanId}/${season}/${ep}?primaryColor=f59e0b&secondaryColor=fbbf24&iconColor=f59e0b&multi_lang=1&autoplay=false&muted=false&volume=1`;
     }
   },
   {
@@ -41,23 +41,23 @@ export const STREAM_SERVERS = [
       const cleanId = isImdb ? (typeof id === 'string' && id.startsWith('tt') ? id : options.imdbId) : (id || options.tmdbId);
       const lang = options?.audioMode === 'hindi' ? 'hi' : 'en';
       return isImdb 
-        ? `https://vidsrc.pm/embed/movie?imdb=${cleanId}&ds_lang=${lang}`
-        : `https://vidsrc.pm/embed/movie?tmdb=${cleanId}&ds_lang=${lang}`;
+        ? `https://vidsrc.pm/embed/movie?imdb=${cleanId}&ds_lang=${lang}&autoplay=0&mute=0&muted=0`
+        : `https://vidsrc.pm/embed/movie?tmdb=${cleanId}&ds_lang=${lang}&autoplay=0&mute=0&muted=0`;
     },
     getTvUrl: (id, season = 1, episode = 1, options = {}) => {
       const isImdb = (typeof id === 'string' && id.startsWith('tt')) || (!id && options.imdbId);
       const cleanId = isImdb ? (typeof id === 'string' && id.startsWith('tt') ? id : options.imdbId) : (id || options.tmdbId);
       const lang = options?.audioMode === 'hindi' ? 'hi' : 'en';
       return isImdb
-        ? `https://vidsrc.pm/embed/tv?imdb=${cleanId}&season=${season}&episode=${episode}&ds_lang=${lang}`
-        : `https://vidsrc.pm/embed/tv?tmdb=${cleanId}&season=${season}&episode=${episode}&ds_lang=${lang}`;
+        ? `https://vidsrc.pm/embed/tv?imdb=${cleanId}&season=${season}&episode=${episode}&ds_lang=${lang}&autoplay=0&mute=0&muted=0`
+        : `https://vidsrc.pm/embed/tv?tmdb=${cleanId}&season=${season}&episode=${episode}&ds_lang=${lang}&autoplay=0&mute=0&muted=0`;
     },
     getAnimeUrl: (malId, ep = 1, audio = 'dub', tmdbId = null, season = 1, options = {}) => {
       const cleanId = tmdbId || options.tmdbId || options.imdbId;
       const isImdb = typeof cleanId === 'string' && cleanId.startsWith('tt');
       return isImdb
-        ? `https://vidsrc.pm/embed/tv?imdb=${cleanId}&season=${season}&episode=${ep}&ds_lang=en`
-        : `https://vidsrc.pm/embed/tv?tmdb=${cleanId}&season=${season}&episode=${ep}&ds_lang=en`;
+        ? `https://vidsrc.pm/embed/tv?imdb=${cleanId}&season=${season}&episode=${ep}&ds_lang=en&autoplay=0&mute=0&muted=0`
+        : `https://vidsrc.pm/embed/tv?tmdb=${cleanId}&season=${season}&episode=${ep}&ds_lang=en&autoplay=0&mute=0&muted=0`;
     }
   },
   {
@@ -69,17 +69,17 @@ export const STREAM_SERVERS = [
     getMovieUrl: (id, options = {}) => {
       const isImdb = typeof id === 'string' && id.startsWith('tt');
       const cleanId = id || options.tmdbId || options.imdbId || '299534';
-      return `https://anyembed.xyz/embed/${isImdb ? 'imdb' : 'tmdb'}-movie-${cleanId}`;
+      return `https://anyembed.xyz/embed/${isImdb ? 'imdb' : 'tmdb'}-movie-${cleanId}?autoplay=0&mute=0`;
     },
     getTvUrl: (id, season = 1, episode = 1, options = {}) => {
       const isImdb = typeof id === 'string' && id.startsWith('tt');
       const cleanId = id || options.tmdbId || options.imdbId;
-      return `https://anyembed.xyz/embed/${isImdb ? 'imdb' : 'tmdb'}-tv-${cleanId}-${season}-${episode}`;
+      return `https://anyembed.xyz/embed/${isImdb ? 'imdb' : 'tmdb'}-tv-${cleanId}-${season}-${episode}?autoplay=0&mute=0`;
     },
     getAnimeUrl: (malId, ep = 1, audio = 'dub', tmdbId = null, season = 1, options = {}) => {
       const cleanId = tmdbId || options.tmdbId || options.imdbId;
       const isImdb = typeof cleanId === 'string' && cleanId.startsWith('tt');
-      return `https://anyembed.xyz/embed/${isImdb ? 'imdb' : 'tmdb'}-tv-${cleanId}-${season}-${ep}`;
+      return `https://anyembed.xyz/embed/${isImdb ? 'imdb' : 'tmdb'}-tv-${cleanId}-${season}-${ep}?autoplay=0&mute=0`;
     }
   },
   {
@@ -90,15 +90,15 @@ export const STREAM_SERVERS = [
     description: 'Worldwide CDN mirror. High reliability failover node for both movies and series.',
     getMovieUrl: (id, options = {}) => {
       const cleanId = id || options.tmdbId || options.imdbId || '299534';
-      return `https://www.2embed.cc/embed/${cleanId}`;
+      return `https://www.2embed.cc/embed/${cleanId}?autoplay=0&mute=0`;
     },
     getTvUrl: (id, season = 1, episode = 1, options = {}) => {
       const cleanId = id || options.tmdbId || options.imdbId;
-      return `https://www.2embed.cc/embedtv/${cleanId}&s=${season}&e=${episode}`;
+      return `https://www.2embed.cc/embedtv/${cleanId}&s=${season}&e=${episode}&autoplay=0&mute=0`;
     },
     getAnimeUrl: (malId, ep = 1, audio = 'dub', tmdbId = null, season = 1, options = {}) => {
       const cleanId = tmdbId || options.tmdbId || options.imdbId;
-      return `https://www.2embed.cc/embedtv/${cleanId}&s=${season}&e=${ep}`;
+      return `https://www.2embed.cc/embedtv/${cleanId}&s=${season}&e=${ep}&autoplay=0&mute=0`;
     }
   }
 ];
