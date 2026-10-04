@@ -5,9 +5,8 @@ import { defineConfig } from 'vite'
 // Security Headers applied to local dev server and preview production server
 const securityHeaders = {
   'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'SAMEORIGIN',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
-  'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()'
+  'Permissions-Policy': 'camera=(), microphone=(self), geolocation=(), payment=()'
 }
 
 // https://vite.dev/config/
