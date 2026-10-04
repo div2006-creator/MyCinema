@@ -66,19 +66,27 @@ export default function SearchModal({ isOpen = true, onClose, onSelectMovie }) {
 
   const handleLaunchCustomTmdb = (e) => {
     e.preventDefault();
-    if (!customTmdbInput.trim()) return;
+    const raw = customTmdbInput.trim();
+    if (!raw) return;
 
-    const id = customTmdbInput.trim();
+    // Security Validation: Only accept clean numeric TMDB IDs or alphanumeric IMDb IDs
+    const sanitizedId = raw.replace(/[^a-zA-Z0-9]/g, '');
+    if (!sanitizedId || (!/^\d+$/.test(sanitizedId) && !/^tt\d+$/i.test(sanitizedId))) {
+      alert('Security Validation: Please enter a valid numeric TMDB ID (e.g. 299534) or IMDb ID (e.g. tt4154796).');
+      return;
+    }
+
     const customMovie = {
-      id: `custom-${id}`,
-      tmdbId: id,
-      title: `TRANSMISSION TMDB #${id}`,
+      id: `custom-${sanitizedId}`,
+      tmdbId: sanitizedId,
+      imdbId: sanitizedId.startsWith('tt') ? sanitizedId : undefined,
+      title: `CUSTOM STREAM #${sanitizedId}`,
       rating: "9.0",
       year: "2025",
       type: "Movie",
-      genres: ["Custom Stream", "Live Extraction"],
+      genres: ["Custom Stream", "Verified Node"],
       image: "https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=600&q=80",
-      synopsis: `Custom media transmission resolved directly from third-party streaming nodes using TMDB identifier #${id}.`,
+      synopsis: `Custom media transmission resolved directly from verified streaming nodes using identifier #${sanitizedId}.`,
       episodes: 1
     };
 

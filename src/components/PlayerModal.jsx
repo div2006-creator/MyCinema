@@ -98,8 +98,8 @@ export default function PlayerModal({
   useEffect(() => {
     const handleBeforeUnload = (e) => {
       e.preventDefault();
-      e.returnValue = 'Playback in progress on this site';
-      return 'Playback in progress on this site';
+      e.returnValue = 'Playback in progress on MyCinema';
+      return 'Playback in progress on MyCinema';
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -107,7 +107,7 @@ export default function PlayerModal({
     // Prevent external popup window.open triggers
     const originalOpen = window.open;
     window.open = function (...args) {
-      console.warn('Blocked external popup attempt:', args);
+      console.warn('[Security Shield] Blocked external popup attempt:', args);
       return null;
     };
 

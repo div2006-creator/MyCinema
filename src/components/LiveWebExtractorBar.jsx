@@ -50,13 +50,14 @@ export default function LiveWebExtractorBar({ onExtractedData }) {
 
   const handleCustomSearch = async (e) => {
     e.preventDefault();
-    if (!query.trim()) return;
+    const cleanQuery = query.trim().replace(/[<>{}\\]/g, '').slice(0, 80);
+    if (!cleanQuery) return;
 
     setIsExtracting(true);
     setActiveExtractor('search');
-    setStatusMessage(`Scraping online web indexers for "${query}"...`);
+    setStatusMessage(`Scraping online web indexers for "${cleanQuery}"...`);
 
-    const items = await extractMoviesFromWeb(query.trim(), 'movie');
+    const items = await extractMoviesFromWeb(cleanQuery, 'movie');
     if (items.length > 0) {
       onExtractedData({
         id: `extracted-custom-${Date.now()}`,
