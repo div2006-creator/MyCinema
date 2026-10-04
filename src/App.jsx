@@ -56,6 +56,10 @@ export default function App() {
   const [isAgeModalOpen, setIsAgeModalOpen] = useState(false);
   const [pendingAgeMovie, setPendingAgeMovie] = useState(null);
 
+  const [selectedMovie, setSelectedMovie] = useState(null);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [extractedCategories, setExtractedCategories] = useState([]);
+
   // Load Watch History from IndexedDB & LocalStorage
   const refreshWatchHistory = async () => {
     try {
@@ -111,10 +115,6 @@ export default function App() {
     }
     initDatabaseSession();
   }, []);
-
-  const [selectedMovie, setSelectedMovie] = useState(null);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [extractedCategories, setExtractedCategories] = useState([]);
 
   // Auto-extract live real movies from online web on initial startup
   useEffect(() => {

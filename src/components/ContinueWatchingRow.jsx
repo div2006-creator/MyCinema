@@ -31,12 +31,15 @@ export default function ContinueWatchingRow({
 
       {/* Horizontal Scroll Deck */}
       <div className="flex items-stretch gap-4 overflow-x-auto no-scrollbar scroll-smooth pb-3">
-        {items.map((item) => {
+        {items.map((item, index) => {
           const isTv = item.type === 'Series' || (item.type === 'Anime' && item.episodes > 1) || item.season > 1 || item.episode > 1;
+          const itemId = item.movieId || item.id || item.title || index;
+          const displayImage = item.poster || item.posterUrl || item.backdrop || item.image || 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&auto=format&fit=crop&q=80';
+          const progressVal = item.progress || item.progressPercent || 35;
 
           return (
             <div
-              key={item.movieId}
+              key={itemId}
               className="relative flex-shrink-0 w-64 sm:w-72 rounded-2xl overflow-hidden cinema-panel cinema-card border border-amber-500/25 bg-[#090d18] group flex flex-col justify-between"
             >
               {/* Card Image with Progress Bar */}
@@ -45,9 +48,12 @@ export default function ContinueWatchingRow({
                 className="relative aspect-video w-full overflow-hidden cursor-pointer bg-black"
               >
                 <img
-                  src={item.posterUrl}
-                  alt={item.title}
+                  src={displayImage}
+                  alt={item.title || 'Movie Thumbnail'}
                   className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&auto=format&fit=crop&q=80';
+                  }}
                 />
 
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
@@ -56,7 +62,7 @@ export default function ContinueWatchingRow({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onRemoveItem(item.movieId);
+                    onRemoveItem(itemId);
                   }}
                   title="Remove from Continue Watching"
                   aria-label={`Remove ${item.title} from history`}
@@ -88,7 +94,7 @@ export default function ContinueWatchingRow({
                 <div className="absolute bottom-0 inset-x-0 h-1.5 bg-white/15 overflow-hidden">
                   <div 
                     className="h-full bg-gradient-to-r from-amber-500 to-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.9)]"
-                    style={{ width: `${item.progressPercent || 45}%` }}
+                    style={{ width: `${progressVal}%` }}
                   />
                 </div>
               </div>
@@ -118,7 +124,7 @@ export default function ContinueWatchingRow({
                     <span>•</span>
                     <span className="flex items-center gap-1 text-slate-400">
                       <Clock className="w-3 h-3" />
-                      <span>{item.progressPercent || 45}% watched</span>
+                      <span>{progressVal}% watched</span>
                     </span>
                   </div>
                 </div>
